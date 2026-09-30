@@ -1,0 +1,125 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+
+%opening
+\title{Blender JA Mixamo Importer Manual}
+\author{BE-Arbiter}
+
+\begin{document}
+
+ \maketitle
+
+ \newpage
+
+ \tableofcontents
+
+ \newpage
+
+ \section{Purpose of this document}
+
+ This manual explains the Blender add-on retargeting Mixamo animations (\texttt{.fbx}) onto Jedi
+ Academy's \texttt{\_humanoid} skeleton as NLA strips. It is meant to be used together with the
+ Blender Jedi Academy Plugin Suite (the \texttt{jediacademy} add-on), which reads and writes the
+ game's \texttt{.gla} and \texttt{animation.cfg} files, and follows the same conventions as the
+ JA dotXSI add-on. It does not explain how to use Blender itself.
+
+ \section{Changelog}
+
+ \subsection*{next version}
+ Initial release:
+ \begin{itemize}
+  \item Mixamo FBX import (binary and ASCII) retargeted onto the \texttt{skeleton\_root} armature,
+        as NLA strips or as the active action
+  \item Automatic scale from both skeletons' hip heights, origin offset, in place and frame rate options
+  \item Several sequence names separated by dots create stacked strips, one action per name
+ \end{itemize}
+
+ \section{Installation}
+
+ Download \texttt{Blender-JA-Mixamo-Importer.zip} from the releases page and install it with the
+ ``Install from Disk'' button in Blender's add-on preferences, then enable
+ ``JA Mixamo NLA Import (.fbx)''. Blender 4.1 or newer is required.
+
+ The add-on adds one menu entry: File $\rightarrow$ Import $\rightarrow$ JA Mixamo NLA Import (.fbx).
+
+ \section{The Mixamo files}
+
+ Download the animation from \url{https://www.mixamo.com} in the FBX format (``FBX Binary'' or
+ ``FBX ASCII'', with or without skin, any frame rate). The file is read by the add-on itself:
+ Blender's own FBX importer is not used (it refuses ASCII files).
+
+ Only the skeleton and its animation are read. The bones are recognized by their Mixamo names,
+ whatever their namespace (\texttt{mixamorig:Hips}, \texttt{mixamorig1:Hips}, \ldots); meshes and
+ other models are ignored. The rest pose is the skeleton's own T-pose, as stored in the file.
+
+ \section{Import}
+
+ \subsection{Target armature}
+
+ The animation is retargeted onto the scene's \texttt{skeleton\_root} armature (the name the
+ jediacademy add-on gives it), or the active armature. Import \texttt{\_humanoid.gla}, or a
+ \texttt{.glm} model using it, with the jediacademy add-on first. The bones must have the
+ \texttt{\_humanoid} names.
+
+ \subsection{Settings}
+
+ \begin{description}
+  \item[Scale] Converts the file's units for the pelvis motion. 0 (the default) measures it: the
+        ratio between the armature's and the file's hip heights above the ankles.
+  \item[Origin Offset] Translation added to the whole skeleton in every frame. Every stock
+        \texttt{\_humanoid} animation has \texttt{model\_root} at (0, 0, -24): the player origin is
+        24 units above the feet.
+  \item[In Place] Drops the horizontal motion of the hips, keeping the vertical one.
+  \item[FPS] Frame rate the animation is resampled to, 0 keeps the file's (30 for Mixamo).
+  \item[Add as NLA Strip] Puts the animation in its own action on a new NLA strip, like the
+        jediacademy add-on's \texttt{.gla} import with an \texttt{animation.cfg}. Otherwise the
+        action becomes the armature's active action.
+  \item[Strip Start] Frame of the new strip, -1 places it right after the last existing strip.
+  \item[Sequence Name] Name of the action and of the \texttt{animation.cfg} sequence, the file name
+        by default. Several names separated by dots (e.g. \texttt{BOTH\_A.BOTH\_B}) create one action
+        per name, their strips stacked at the same frames on successive tracks.
+  \item[Loop Frame] \texttt{animation.cfg} loop frame: -1 for no loop, 0 to loop from the start.
+  \item[Set Scene Range \& FPS] Makes the scene's frame range include the new animation and uses
+        its frame rate.
+ \end{description}
+
+ \subsection{Retargeting}
+
+ Mixamo skeletons rest in a T-pose, \texttt{\_humanoid} in an A-pose. For every mapped bone the
+ add-on first turns the Jedi Academy bone so that it points where the Mixamo bone points at rest,
+ then applies the Mixamo bone's rotation in every frame. Only the pelvis takes the file's
+ translation; every other bone keeps its length.
+
+ \begin{tabular}{ll}
+  Mixamo & \texttt{\_humanoid} \\
+  \hline
+  Hips & pelvis \\
+  Spine, Spine1, Spine2 & lower\_lumbar, upper\_lumbar, thoracic \\
+  Neck, Head & cervical, cranium \\
+  Shoulder, Arm, ForeArm, Hand & clavical, humerus, radius, hand \\
+  HandThumb1, 2 & d1\_j1, d1\_j2 \\
+  HandIndex1, 2 & d2\_j1, d2\_j2 \\
+  HandRing1, 2 & d4\_j1, d4\_j2 \\
+  Hand & hang\_tag\_bone \\
+  UpLeg, Leg, Foot & femurYZ, tibia, talus \\
+ \end{tabular}
+
+ \medskip
+
+ The other bones (twist bones \texttt{humerusX}, \texttt{radiusX}, \texttt{femurX}, the face, the
+ tails, \texttt{Motion}) follow their parent. The fingers and the hand tag bones follow the hand,
+ although Ghoul 2 parents them to the forearm, so the saber stays in the hand.
+
+ \section{Workflow with the Jedi Academy plugin suite}
+
+ \begin{enumerate}
+  \item Import \texttt{\_humanoid.gla} (or a model) with the jediacademy add-on, with its
+        \texttt{animation.cfg} if the new animations are added to the existing ones.
+  \item Import each Mixamo file with File $\rightarrow$ Import $\rightarrow$ JA Mixamo NLA Import
+        (.fbx), giving it its sequence name (e.g. \texttt{BOTH\_STAND2}).
+  \item Export the \texttt{.gla} and \texttt{animation.cfg} with the jediacademy add-on.
+ \end{enumerate}
+
+\end{document}

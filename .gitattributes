@@ -1,0 +1,2 @@
+# Test fixtures are exact byte streams (binary FBX) or generated text; never convert line endings
+*.fbx -text
